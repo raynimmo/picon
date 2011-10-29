@@ -1,0 +1,86 @@
+<?php
+
+/**
+ * @file
+ * install file for picon module
+ *
+ */
+
+/**
+ * Implementaton of hook install
+ */
+function picon_install() {
+  drupal_install_schema('picon');
+  db_query("INSERT INTO {picon} (pid, image, alt, anchor, title, directory, render_loc) VALUES (%d, %d, '%s', %d, '%s', %d, %d)", '1', '1', 'Powered by Drupal, Drupal Kicks Ass', '1', 'Powered by Drupal,  Drupal Rocks', 0 , 0);
+}
+
+/**
+ * Implementation of hook_uninstall()
+ */
+function picon_uninstall() {
+  unset($theme_registry['system_powered_by']['preprocess functions']['theme_system_powered_by']);
+  drupal_uninstall_schema('picon');
+}
+
+/**
+ * Implementation of hook_schema()
+ */ 
+function picon_schema() {
+  $schema['picon'] = array(
+    'description' => t('Stores the icon reference used'),
+    'fields' => array(
+      'pid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+				'description' => t('The icon image used.')				
+      ),
+      'image' => array(
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 1,
+			'description' => t('The image used in place of the default one')								
+      ),
+      'alt' => array(
+        'description' => t('The alternate text for the icon image'),
+        'type' => 'text',
+        'not null' => TRUE,
+				'size' => 'big'								
+      ),
+      'anchor' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+				'description' => t('Flag denoting if an anchor tag is used.')									
+      ),
+      'title' => array(
+        'description' => t('The title attribute that is associated with the anchor tag'),
+        'type' => 'text',
+				'not null' => TRUE,
+				'size' => 'big'
+			),
+			'directory' => array(				
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+				'default' => 0,
+				'description' => t('The location to search for images')			
+      ),
+			'render_loc' => array(				
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+				'default' => 0,
+				'description' => t('The location within the template to render the icon')
+			), 			
+    ),
+    'primary key' => array(
+      'pid'
+    ),
+  );
+  return $schema;
+}
+

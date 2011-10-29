@@ -1,1 +1,4 @@
 name = Picon
+description = Allows site administrators to change the 'Powered By' Drupal Image usually shown in the page footer
+core = 6.x
+package = Theme Enhancements

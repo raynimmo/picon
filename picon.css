@@ -1,0 +1,44 @@
+/* $Id: picon.css,v 1.0 */
+
+@CHARSET "ISO-8859-1";
+
+
+form#picon-admin-settings fieldset{
+	
+}
+
+form#picon-admin-settings fieldset legend{
+	border:1px solid #575757;
+	text-transform:uppercase;
+	background:#dbdbdb;
+	color: #575757;
+	font-size:0.8em;
+	padding:2px 4px;
+}
+
+
+div#image-proofs{
+	float:right; 
+	width:240px;
+	margin-top:-14px;
+	display:inline-block;
+	height:580px;
+	overflow-y:scroll;
+	margin-left:20px;
+}
+div#image-proofs fieldset{
+	margin-right:0;
+}
+
+
+div.image-proof{
+	padding-bottom:6px;
+	margin-bottom:8px;
+	border-bottom:2px groove;
+	font-size:10px;
+}
+
+div.picon-el{
+	text-align: center;
+	margin:5px 0;
+}
