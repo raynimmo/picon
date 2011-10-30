@@ -19,64 +19,64 @@ function picon_menu() {
     'page arguments' => array('picon_admin_settings'),
     'access arguments' => array('administer site configuration'),
     'type' => 'MENU_NORMAL_ITEM'
-	);	
+  );
   return $items;
 }
- 
+
 /**
  * Function to retrieve images from the selected directory
  *
  * @param string $img_dir
- *	Image directory path from the site root
+ *  Image directory path from the site root
  * 
  * @return
  *  $images, array containing image paths and names
  */
-function picon_get_drupal_images($img_dir) {	
+function picon_get_drupal_images($img_dir) {
   $images = array();
-	$directory = $img_dir;
-	$mask = 'powered-';
-	$files = file_scan_directory($directory, $mask);
-	$i = 0;
+  $directory = $img_dir;
+  $mask = 'powered-';
+  $files = file_scan_directory($directory, $mask);
+  $i = 0;
   foreach ($files as $value) {
     if ($directory == 'misc') {
-		  $images[$i] = trim($value->filename, ($directory . "/"));
+      $images[$i] = trim($value->filename, ($directory . "/"));
     } 
     else {
       $images[$i] = $value->filename;
     }
     $i++;
   }
-	return $images;
-} 
- 
+  return $images;
+}
+
 /**
  * Function to return the image folder path depending upon the selection
  *
  * @param int $img_loc
- *	Image location stored as integer value
+ *  Image location stored as integer value
  */
-function picon_get_img_path($img_loc) {	
+function picon_get_img_path($img_loc) {
   if ($img_loc == 0) {
-	  $file_dir = 'misc';
+    $file_dir = 'misc';
   }
   else {
-	  $theme_name = variable_get('theme_default');		
+    $theme_name = variable_get('theme_default');
     $theme_path = drupal_get_path('theme', $theme_name);
-		$file_dir = $theme_path . "/images/icons";	
+    $file_dir = $theme_path . "/images/icons";
   }
-	return $file_dir;	
+  return $file_dir;
 }
 
  /**
  * Form Builder. Configure admin settings page
  */
-function picon_admin_settings() {		
-  //add the stylesheet
+function picon_admin_settings() {
+  // add the stylesheet
   $module_path = drupal_get_path('module', 'picon');
   $css_path = $module_path .'/picon.css';
-  drupal_add_css($css_path);	
-  //check for defaults, if not present then insert to database
+  drupal_add_css($css_path);
+  // check for defaults, if not present then insert to database
   $current_image = db_result(db_query('SELECT image from {picon} WHERE pid=%d', '1'));
   if ($current_image == '') {
     db_query("INSERT INTO {picon} (pid, image, alt, anchor, title, directory, render_loc) VALUES (%d, %d, '%s', %d, '%s', %d, %d)", '1', '1', 'Powered by Drupal, Drupal Kicks Ass', '1', 'Powered by Drupal,  Drupal Rocks', 0, 0);
@@ -93,120 +93,120 @@ function picon_admin_settings() {
     $title_text = $data->title;
     $img_loc = $data->directory;
     $ren_loc = $data->render_loc;
-	}	
-  $file_dir = picon_get_img_path($img_loc);	
-  $options = picon_get_drupal_images($file_dir);	
+  }
+  $file_dir = picon_get_img_path($img_loc);
+  $options = picon_get_drupal_images($file_dir);
   $form['current_images_available'] = array(
     '#type' => 'fieldset',
     '#title' => 'Images Available',
     '#prefix' => '<div id="image-proofs">',
     '#suffix' => '</div>',
-  );	
+  );
   if ($file_dir != 'misc') {
     $file_dir = '';
-  }	
-	foreach ($options AS $image_proof => $imagelink) {
-		$form['current_images_available'][$image_proof] = array(
-			'#type' => 'image_button',
-			'#src' => $file_dir . '/' . $imagelink,
-			'#value' => '',
-			'#disabled' => TRUE,
-			'#prefix' => '<div class="image-proof">',
-			'#suffix' => '<br />' . trim($imagelink, '/') . '<br /></div>',
-		);
-		$i++;
-	}	
-	$form['current_selection'] = array(
-		'#type' => 'fieldset',
-		'#title' => t('Current <strong>Powered By</strong> Icon Used'),
-		'#description' => trim($options[$current], '/'),
-	);
-	if ($current > sizeof($options)) {
-		$current = '1';
-	}	
-	$form['current_selection'][$image_used] = array(
-	  '#type' => 'image_button',
-	  '#src' => $file_dir . '/' . $options[$current],
-	  '#value' => '',
-	  '#disabled' => TRUE,
-	);		
-	$form['picon_image_selection'] = array(
-		'#type' => 'select',
-		'#title' => t('Administrators may select any of the images shown below that are contained in the selected location'),
-		'#options' => $options,
-		'#default_value' => $current,
-		'#description' => t('The image will replace the current \'Powered By\' Drupal image that is shown in the block of the same name'), 		
-	);	
-	$form['picon_alt_text'] = array(
-		'#type' => 'textfield',
-		'#title' => t('The ALT text attribute of the image'),
-		'#default_value' => $alt_text,
-		'#description' => t('The ALT text attribute of the image that is shown when images are disabled.'),
-		'#size' => 65, 		
-	);	
-	$form['image_link_settings'] = array(
-		'#type' => 'fieldset',
-		'#title' => 'Image as a link',
-	);		
-	$form['image_link_settings']['picon_image_link'] = array(
-		'#type' => 'radios',
-		'#title' => t('Set the image as a clickable link'),
-		'#options' => array(
-			t('Yes'), //0 for yes
-			t('No')
-		),
-		'#default_value' => $isanchor,
-		'#description' => t('If this value is set then it will always point to Drupal.org<hr />'),
-	);	
-	$form['image_link_settings']['picon_title_text'] = array(
-		'#type' => 'textfield',
-		'#title' => t('The TITLE text attribute of the image'),
-		'#default_value' => $title_text,
-		'#description' => t('The TITLE text attribute of the link that is shown when mouse is hovered over the link.'),
-		'#size' => 65, 		
-	);	
-	$form['display_options'] = array(
-		'#type' => 'fieldset',
-		'#title' => 'Display Options',
-	);	
-	$form['display_options']['picon_display'] = array(
-		'#type' => 'radios',
-		'#title' => t('Set the placement of the icon within your template'),
-		'#options' => array(
-			t('Replace standard <strong>Powered By</strong> block icon'), //0 for default
-			t('Append to your themes <strong>PHP $closure</strong> variable'),
-			t('Append to inside of closing html <strong>&#60;&#47;body&#62;</strong> tag <i><small>(requires JavaScript to append, problematic in Internet Explorer)</small></i>')
-		),
-		'#default_value' => $ren_loc,
-		'#description' => t('Please ensure your theme is compatible with the placement you choose. If using the block selection then please ensure this block is enabled and placed in your blocks administration area.'),
-	);		
-	$form['directory_options'] = array(
-		'#type' => 'fieldset',
-		'#title' => 'Folder To Scan For Images',
-	);		
-	$form['directory_options']['picon_location'] = array(
-		'#type' => 'radios',
-		'#title' => t('The file system location to auto discover images'),
-		'#options' => array(
-			t('Drupal\'s <strong>misc</strong> folder'), //0 for default
-			t('Your themes <strong>images/icons</strong> folder')			
-		),
-		'#default_value' => $img_loc,
-		'#description' => t('<p>The location that images file that are appropriately named are used for this module. Ensure that any images that you wish to use are named as <strong>powered-</strong>xxxx.png . The module will display any images that meet this naming convention in the scrolling panel shown on the right side.</p><p>Changes to the folder will be shown upon next save event</p> '),
-	);	
-	$form['submit'] = array(
-		'#type' => 'submit',
-		'#value' => t('Save'),
-	);	
-	return $form;
-} 
+  } 
+  foreach ($options AS $image_proof => $imagelink) {
+    $form['current_images_available'][$image_proof] = array(
+      '#type' => 'image_button',
+      '#src' => $file_dir . '/' . $imagelink,
+      '#value' => '',
+      '#disabled' => TRUE,
+      '#prefix' => '<div class="image-proof">',
+      '#suffix' => '<br />' . trim($imagelink, '/') . '<br /></div>',
+    );
+    $i++;
+  } 
+  $form['current_selection'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Current <strong>Powered By</strong> Icon Used'),
+    '#description' => trim($options[$current], '/'),
+  );
+  if ($current > sizeof($options)) {
+    $current = '1';
+  } 
+  $form['current_selection'][$image_used] = array(
+    '#type' => 'image_button',
+    '#src' => $file_dir . '/' . $options[$current],
+    '#value' => '',
+    '#disabled' => TRUE,
+  );    
+  $form['picon_image_selection'] = array(
+    '#type' => 'select',
+    '#title' => t('Administrators may select any of the images shown below that are contained in the selected location'),
+    '#options' => $options,
+    '#default_value' => $current,
+    '#description' => t('The image will replace the current \'Powered By\' Drupal image that is shown in the block of the same name'),
+  );  
+  $form['picon_alt_text'] = array(
+    '#type' => 'textfield',
+    '#title' => t('The ALT text attribute of the image'),
+    '#default_value' => $alt_text,
+    '#description' => t('The ALT text attribute of the image that is shown when images are disabled.'),
+    '#size' => 65,
+  );  
+  $form['image_link_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Image as a link',
+  );    
+  $form['image_link_settings']['picon_image_link'] = array(
+    '#type' => 'radios',
+    '#title' => t('Set the image as a clickable link'),
+    '#options' => array(
+      t('Yes'), // 0 for yes
+      t('No')
+    ),
+    '#default_value' => $isanchor,
+    '#description' => t('If this value is set then it will always point to Drupal.org<hr />'),
+  );  
+  $form['image_link_settings']['picon_title_text'] = array(
+    '#type' => 'textfield',
+    '#title' => t('The TITLE text attribute of the image'),
+    '#default_value' => $title_text,
+    '#description' => t('The TITLE text attribute of the link that is shown when mouse is hovered over the link.'),
+    '#size' => 65,    
+  );  
+  $form['display_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Display Options',
+  );  
+  $form['display_options']['picon_display'] = array(
+    '#type' => 'radios',
+    '#title' => t('Set the placement of the icon within your template'),
+    '#options' => array(
+      t('Replace standard <strong>Powered By</strong> block icon'), // 0 for default
+      t('Append to your themes <strong>PHP $closure</strong> variable'),
+      t('Append to inside of closing html <strong>&#60;&#47;body&#62;</strong> tag <i><small>(requires JavaScript to append, problematic in Internet Explorer)</small></i>')
+    ),
+    '#default_value' => $ren_loc,
+    '#description' => t('Please ensure your theme is compatible with the placement you choose. If using the block selection then please ensure this block is enabled and placed in your blocks administration area.'),
+  );    
+  $form['directory_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Folder To Scan For Images',
+  );    
+  $form['directory_options']['picon_location'] = array(
+    '#type' => 'radios',
+    '#title' => t('The file system location to auto discover images'),
+    '#options' => array(
+      t('Drupal\'s <strong>misc</strong> folder'), // 0 for default
+      t('Your themes <strong>images/icons</strong> folder')
+    ),
+    '#default_value' => $img_loc,
+    '#description' => t('<p>The location that images file that are appropriately named are used for this module. Ensure that any images that you wish to use are named as <strong>powered-</strong>xxxx.png . The module will display any images that meet this naming convention in the scrolling panel shown on the right side.</p><p>Changes to the folder will be shown upon next save event</p> '),
+  );  
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );  
+  return $form;
+}
  
 /**
  * submit handler
  */  
-function picon_admin_settings_submit($form_id, $form) {	
-	db_query("UPDATE {picon} SET image = %d, alt = '%s', anchor = %d, title = '%s', directory = %d, render_loc = %d WHERE pid = %d", $form['values']['picon_image_selection'], $form['values']['picon_alt_text'], $form['values']['picon_image_link'], $form['values']['picon_title_text'], $form['values']['picon_location'], $form['values']['picon_display'], '1');	
-	drupal_set_message(t('Your icon selection has been saved'));
+function picon_admin_settings_submit($form_id, $form) { 
+  db_query("UPDATE {picon} SET image = %d, alt = '%s', anchor = %d, title = '%s', directory = %d, render_loc = %d WHERE pid = %d", $form['values']['picon_image_selection'], $form['values']['picon_alt_text'], $form['values']['picon_image_link'], $form['values']['picon_title_text'], $form['values']['picon_location'], $form['values']['picon_display'], '1');  
+  drupal_set_message(t('Your icon selection has been saved'));
 }
  
 /**
@@ -215,8 +215,8 @@ function picon_admin_settings_submit($form_id, $form) {
 function picon_theme_registry_alter(&$theme_registry) {
   foreach ($theme_registry['system_powered_by']['preprocess functions'] as $key => $value) {
     if ($value == 'template_preprocess_system_powered_by' || $value == 'picon_phptemplate_system_powered_by') {
-		unset($theme_registry['system_powered_by']['preprocess functions'][$key]);
-		phptemplate_system_powered_by(&$variables);
+    unset($theme_registry['system_powered_by']['preprocess functions'][$key]);
+    phptemplate_system_powered_by(&$variables);
     }
   }
 }
@@ -228,91 +228,88 @@ function picon_theme_registry_alter(&$theme_registry) {
  * @see theme_system_powered_by()
  */  
 function phptemplate_system_powered_by($image_path) {
-	global $theme_key;	
-	$pid = '1';
-	$sql = "SELECT pid, image, alt, anchor, title, directory, render_loc from {picon} WHERE pid = %d";
-	$result = db_query(db_rewrite_sql($sql), $pid);	
-	while ($data = db_fetch_object($result)) {
-		$cpid = $data->pid;
-		$current = $data->image;
-		$alt_text = $data->alt;
-		$isanchor = $data->anchor;
-		$title_text = $data->title;
-		$img_loc = $data->directory;
-		$ren_loc = $data->render_loc;
-	}	
-	$file_dir = picon_get_img_path($img_loc);		
-	$images = picon_get_drupal_images($file_dir);	
-	$image_name = $images[$current];		
-	if ($file_dir == 'misc') {
-		$theme_path = drupal_get_path('theme', $theme_key);  //required for switching to theme folder for images
-		$image_path = $file_dir . '/' . $image_name;	
-	} 
-	else {
-		$image_path = $image_name;
-	}		
-	$image = theme('image', $image_path, t($alt_text), t($title_text));	
-	$attrib = array("target" => "_blank");  	
-	/*
-	 * $ren_loc sets rendered location of image within page html structure
-	 *  as '0', in powered by block
-	 *  as '1', add to closure
-	 *  as '2', add to inside of body end tag
-	 */
-	if ($isanchor == 0) { //image as link	
-		$image_as_link = l($image, 'http://drupal.org', array('attributes' => $attrib, 'html' => TRUE, 'absolute' => TRUE, 'external' => TRUE));
-		if ($ren_loc == 0) {	
-			return $image_as_link;		
-		} 
-		elseif ($ren_loc == 1) {
-			drupal_add_js('--></script><div class="picon-el">' . $image_as_link . '</div><script><!--', 'inline', 'footer');
-		} 
-		elseif ($ren_loc == 2) {
-			$full_image_path = url($image_path);
-			
-			drupal_add_js("-->
-				$(document).ready(function(){
-					var _body = document.getElementsByTagName('body') [0];
-					var _div = document.createElement('div');
-					_div.setAttribute('class','picon-el');
-					var _link = document.createElement('a');
-					_link.setAttribute('href','http://drupal.org');
-					_link.setAttribute('title','" . $title_text . "');
-					_link.setAttribute('target','_blank');					
-					var _image = document.createElement('img');
-					_image.setAttribute('src','" . $full_image_path . "');
-					_image.setAttribute('alt','" . $alt_text . "');					
-					_link.appendChild(_image);
-					_div.appendChild(_link);
-					_body.appendChild(_div);					
-				});<!--
-			", 'inline', 'footer');			
-		}		
-	}
-	else{ //flat image without link	
-		if ($ren_loc == 0) {
-			return $image;
-		}
-		elseif ($ren_loc == 1) {
-			drupal_add_js('--></script><div class="picon-el">' . $image . '</div><script><!--', 'inline', 'footer');
-		} 
-		elseif ($ren_loc == 2) {
-			$full_image_path = url($image_path);			
-			drupal_add_js("-->
-				$(document).ready(function(){
-					var _body = document.getElementsByTagName('body') [0];
-					var _div = document.createElement('div');	
-					_div.setAttribute('class','picon-el');					
-					var _image = document.createElement('img');
-					_image.setAttribute('src','" . $full_image_path . "');
-					_image.setAttribute('alt','" . $alt_text . "');						
-					_div.appendChild(_image);
-					_body.appendChild(_div);
-				});<!--
-			", 'inline', 'footer');			
-		}		
-	}	
+  global $theme_key;
+  $pid = '1';
+  $sql = "SELECT pid, image, alt, anchor, title, directory, render_loc from {picon} WHERE pid = %d";
+  $result = db_query(db_rewrite_sql($sql), $pid);
+  while ($data = db_fetch_object($result)) {
+    $cpid = $data->pid;
+    $current = $data->image;
+    $alt_text = $data->alt;
+    $isanchor = $data->anchor;
+    $title_text = $data->title;
+    $img_loc = $data->directory;
+    $ren_loc = $data->render_loc;
+  } 
+  $file_dir = picon_get_img_path($img_loc);
+  $images = picon_get_drupal_images($file_dir);
+  $image_name = $images[$current];
+  if ($file_dir == 'misc') {
+    $theme_path = drupal_get_path('theme', $theme_key);  // required for switching to theme folder for images
+    $image_path = $file_dir . '/' . $image_name;
+  } 
+  else {
+    $image_path = $image_name;
+  }   
+  $image = theme('image', $image_path, t($alt_text), t($title_text));
+  $attrib = array("target" => "_blank");
+  /*
+   * $ren_loc sets rendered location of image within page html structure
+   *  as '0', in powered by block
+   *  as '1', add to closure
+   *  as '2', add to inside of body end tag
+   */
+  if ($isanchor == 0) { //image as link 
+    $image_as_link = l($image, 'http://drupal.org', array('attributes' => $attrib, 'html' => TRUE, 'absolute' => TRUE, 'external' => TRUE));
+    if ($ren_loc == 0) {  
+      return $image_as_link;    
+    } 
+    elseif ($ren_loc == 1) {
+      drupal_add_js('--></script><div class="picon-el">' . $image_as_link . '</div><script><!--', 'inline', 'footer');
+    } 
+    elseif ($ren_loc == 2) {
+      $full_image_path = url($image_path);
+      
+      drupal_add_js("-->
+        $(document).ready(function(){
+          var _body = document.getElementsByTagName('body') [0];
+          var _div = document.createElement('div');
+          _div.setAttribute('class','picon-el');
+          var _link = document.createElement('a');
+          _link.setAttribute('href','http://drupal.org');
+          _link.setAttribute('title','" . $title_text . "');
+          _link.setAttribute('target','_blank');
+          var _image = document.createElement('img');
+          _image.setAttribute('src','" . $full_image_path . "');
+          _image.setAttribute('alt','" . $alt_text . "');
+          _link.appendChild(_image);
+          _div.appendChild(_link);
+          _body.appendChild(_div);
+        });<!--
+      ", 'inline', 'footer');
+    }   
+  }
+  else{ //flat image without link 
+    if ($ren_loc == 0) {
+      return $image;
+    }
+    elseif ($ren_loc == 1) {
+      drupal_add_js('--></script><div class="picon-el">' . $image . '</div><script><!--', 'inline', 'footer');
+    } 
+    elseif ($ren_loc == 2) {
+      $full_image_path = url($image_path);
+      drupal_add_js("-->
+        $(document).ready(function(){
+          var _body = document.getElementsByTagName('body') [0];
+          var _div = document.createElement('div'); 
+          _div.setAttribute('class','picon-el');          
+          var _image = document.createElement('img');
+          _image.setAttribute('src','" . $full_image_path . "');
+          _image.setAttribute('alt','" . $alt_text . "');
+          _div.appendChild(_image);
+          _body.appendChild(_div);
+        });<!--
+      ", 'inline', 'footer');
+    }
+  }
 }
-
- 
- 

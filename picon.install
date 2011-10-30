@@ -34,48 +34,48 @@ function picon_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 1,
-				'description' => t('The icon image used.')				
+        'description' => t('The icon image used.'),
       ),
       'image' => array(
       'type' => 'int',
       'unsigned' => TRUE,
       'not null' => TRUE,
       'default' => 1,
-			'description' => t('The image used in place of the default one')								
+      'description' => t('The image used in place of the default one'),
       ),
       'alt' => array(
         'description' => t('The alternate text for the icon image'),
         'type' => 'text',
         'not null' => TRUE,
-				'size' => 'big'								
+        'size' => 'big',
       ),
       'anchor' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 1,
-				'description' => t('Flag denoting if an anchor tag is used.')									
+        'description' => t('Flag denoting if an anchor tag is used.'),
       ),
       'title' => array(
         'description' => t('The title attribute that is associated with the anchor tag'),
         'type' => 'text',
-				'not null' => TRUE,
-				'size' => 'big'
-			),
-			'directory' => array(				
-        'type' => 'int',
-        'unsigned' => TRUE,
         'not null' => TRUE,
-				'default' => 0,
-				'description' => t('The location to search for images')			
+        'size' => 'big',
       ),
-			'render_loc' => array(				
+      'directory' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-				'default' => 0,
-				'description' => t('The location within the template to render the icon')
-			), 			
+        'default' => 0,
+        'description' => t('The location to search for images'),
+      ),
+      'render_loc' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The location within the template to render the icon'),
+      ),      
     ),
     'primary key' => array(
       'pid'
