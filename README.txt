@@ -1,23 +1,12 @@
 
-Project Sandbox
+Project Page
 ---------------
-http://drupal.org/sandbox/raynimmo/1326130
-
-6.x-1.x Git Repository
-----------------------
-http://drupalcode.org/sandbox/raynimmo/1326130.git
-  /shortlog/refs/heads/6.x-1.x
-
-Git clone
----------
-git clone --branch 6.x-1.x 
-  http://git.drupal.org/sandbox/raynimmo/1326130.git picon
+http://drupal.org/project/picon
 
 Drupal Version
 --------------
 Drupal 6
 Built and tested with Drupal 6.22
-
 
 Module Description
 -------------------
@@ -54,7 +43,7 @@ Copy picon.module to your module directory and then enable it on the admin
 modules page.  The main settings for the module can be found at
 admin/settings/picon.
 
-The access permissions must be set for the module within 
+The access permissions must be set for the module within
 admin/user/permissions
 
 If using the standard block display option then this block must first be
