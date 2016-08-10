@@ -1,4 +1,4 @@
-
+﻿
 Project Page
 ---------------
 http://drupal.org/project/picon
@@ -56,6 +56,6 @@ This has been tested using jpeg, png and gif filetypes.
 Author
 ------
 Ray Nimmo
-ray@junglecreative.com
+ray [at] junglecreative [dot] com
 
 I welcome any feedback, suggestions or feature requests you may have.

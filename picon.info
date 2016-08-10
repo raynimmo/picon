@@ -1,0 +1,5 @@
+
+name = Picon
+description = Allows site administrators to change the 'Powered By Drupal' icon, its attributes, its behaviour and the folder that it is contained within.
+core = 6.x
+package = Theme Enhancements

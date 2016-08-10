@@ -1,0 +1,29 @@
+/**
+ * @file.
+ * Default styling for Picon module settings page.
+ */
+
+div#picon-image-proof-list {
+  display: inline-block;
+  float: right;
+  margin-left: 20px; /* LTR */
+  margin-top: -14px;
+  overflow-y: scroll;
+  width: 240px;
+}
+
+div.picon-image-proof {
+  border-bottom: 2px groove;
+  font-size: 10px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+}
+
+form#picon-admin-settings input[type = "image"]:hover {
+  cursor: default;
+}
+
+div.picon-el {
+  margin: 5px 0;
+  text-align: center;
+}

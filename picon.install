@@ -1,0 +1,18 @@
+<?php
+/**
+ * @file
+ * Contains install functions for picon module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function picon_uninstall() {
+  variable_del('picon_image');
+  variable_del('picon_alt');
+  variable_del('picon_anchor');
+  variable_del('picon_title');
+  variable_del('picon_dir');
+  variable_del('picon_location');
+  variable_del('picon_opento');
+}

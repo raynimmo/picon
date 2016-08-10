@@ -1,0 +1,399 @@
+<?php
+/**
+ * @file
+ * Allow admin users to edit the 'powered by' drupal icon used.
+ */
+
+/**
+ * Implements hook_perm().
+ */
+function picon_perm() {
+  return array('access picon configuration');
+}
+
+/**
+ * Implements hook_init().
+ */
+function picon_init() {
+  drupal_add_css(drupal_get_path('module', 'picon') . '/picon.css');
+  drupal_add_js(drupal_get_path('module', 'picon') . '/picon.js');
+}
+
+
+/**
+ * Implements hook_menu().
+ */
+function picon_menu() {
+  $items['admin/settings/picon'] = array(
+    'title' => 'Picon configuration',
+    'description' => 'Edit the powered-by icon displayed',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('picon_admin_settings'),
+    'access arguments' => array('access picon configuration'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function picon_theme_registry_alter(&$theme_registry) {
+  foreach ($theme_registry['system_powered_by']['preprocess functions'] as $key => $value) {
+    if ($value == 'template_preprocess_system_powered_by' || $value == 'phptemplate_system_powered_by') {
+      unset($theme_registry['system_powered_by']['preprocess functions'][$key]);
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function picon_theme($existing, $type, $theme, $path) {
+  $templates = drupal_find_theme_functions($existing, array('picon_system_powered_by', $theme));
+  return $templates;
+}
+
+/**
+ * Implements theme_preprocess_page().
+ */
+function picon_preprocess_page(&$vars) {
+  $picon_icon = picon_closure_check();
+  if (isset($picon_icon)) {
+    $vars['closure'] .= '<div class="picon-el">' . $picon_icon . '</div>';
+  }
+}
+
+/**
+ * Function to retrieve images from the selected directory.
+ *
+ * @param string $img_dir
+ *   Image directory path from the site root.
+ *
+ * @return array
+ *   Contains an array of image paths and names.
+ */
+function picon_get_drupal_images($img_dir) {
+  $images = array();
+  $directory = $img_dir;
+  $mask = 'powered-';
+  $files = file_scan_directory($directory, $mask);
+  $i = 0;
+  foreach ($files as $value) {
+    if ($directory == 'misc') {
+      $images[$i] = trim($value->filename, ($directory . "/"));
+    }
+    else {
+      $images[$i] = $value->filename;
+    }
+    $i++;
+  }
+  return $images;
+}
+
+/**
+ * Function to return the image folder path depending upon the selection.
+ *
+ * @param int $img_loc
+ *   Stores image location reference as integer value.
+ */
+function picon_get_img_path($img_loc) {
+  if ($img_loc == 0) {
+    $file_dir = 'misc';
+  }
+  else {
+    $theme_name = variable_get('theme_default', NULL);
+    $theme_path = drupal_get_path('theme', $theme_name);
+    $file_dir = $theme_path . "/images/icons";
+  }
+  return $file_dir;
+}
+
+/**
+ * Form Builder. Configure admin settings page.
+ */
+function picon_admin_settings() {
+  $current = variable_get('picon_image', '1');
+  $alt_text = variable_get('picon_alt', 'Powered by Drupal, an open source content management system');
+  $isanchor = variable_get('picon_anchor', '1');
+  $title_text = variable_get('picon_title', 'Powered by Drupal, an open source content management system');
+  $img_loc = variable_get('picon_dir', '0');
+  $ren_loc = variable_get('picon_location', '0');
+  $opento = variable_get('picon_opento', '1');
+  $file_dir = picon_get_img_path($img_loc);
+  $options = picon_get_drupal_images($file_dir);
+  if ($current > count($options)) {
+    $current = '1';
+  }
+  if ($options) {
+    $image_available_desc = t('Currently available images within the selected directory.');
+  }
+  else {
+    $image_available_desc = t('There are no compatible images in the selected directory.<br />Refer to the image naming conventions.');
+  }
+  $form['current_images_available'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Images available'),
+    '#prefix' => '<div id="picon-image-proof-list">',
+    '#suffix' => '</div>',
+    '#description' => $image_available_desc,
+  );
+
+  if ($options) {
+    foreach ($options as $image_proof => $imagelink) {
+      if ($file_dir != 'misc') {
+        $image_proof_suffix = '<br />' . str_replace($file_dir . '/', '', $imagelink) . '<br /></div>';
+        $image_proof_src = '/' . $imagelink;
+      }
+      else {
+        $image_proof_suffix = '<br />' . trim($imagelink, '/') . '<br /></div>';
+        $image_proof_src = $file_dir . '/' . $imagelink;
+      }
+      $form['current_images_available'][$image_proof] = array(
+        '#type' => 'image_button',
+        '#src' => $image_proof_src,
+        '#value' => '',
+        '#disabled' => TRUE,
+        '#prefix' => '<div class="picon-image-proof">',
+        '#suffix' => $image_proof_suffix,
+      );
+    }
+  }
+  if ($options) {
+    if ($file_dir != 'misc') {
+      $current_selection_desc = str_replace($file_dir . '/', '', $options[$current]);
+      $image_used_src = $options[$current];
+    }
+    else {
+      $current_selection_desc = trim($options[$current], '/');
+      $image_used_src = $file_dir . '/' . $options[$current];
+    }
+  }
+  else {
+    $current_selection_desc = t('No compatible images found');
+  }
+  $form['current_selection'] = array(
+    '#type' => 'fieldset',
+    '#title' => t("Current <strong>'powered by'</strong> icon used"),
+    '#description' => $current_selection_desc,
+  );
+
+  if ($options) {
+    $form['current_selection']['image_used'] = array(
+      '#type' => 'image_button',
+      '#src' => $image_used_src,
+      '#value' => '',
+      '#disabled' => TRUE,
+    );
+  }
+  if ($options) {
+    $picon_image_selection_desc = t("The image will replace the current 'Powered By' site image that is shown in the block of the same name");
+  }
+  else {
+    $picon_image_selection_desc = t('No compatible images found');
+  }
+  $form['picon_image_selection'] = array(
+    '#type' => 'select',
+    '#title' => t('Administrators may select any of the images shown in the dropdown selector that are contained in the selected location'),
+    '#options' => $options,
+    '#default_value' => $current,
+    '#description' => $picon_image_selection_desc,
+  );
+  $form['picon_alt_text'] = array(
+    '#type' => 'textfield',
+    '#title' => t('The ALT text attribute of the image'),
+    '#default_value' => $alt_text,
+    '#description' => t('The ALT text attribute of the image that is shown when images are disabled.'),
+    '#size' => 52,
+  );
+  $form['image_link_settings'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Image as a link'),
+  );
+  $form['image_link_settings']['picon_image_link'] = array(
+    '#type' => 'radios',
+    '#title' => t('Set the image as a clickable link'),
+    '#options' => array(
+      0 => t('No'),
+      1 => t('Yes'),
+    ),
+    '#default_value' => $isanchor,
+    '#description' => t('If this value is set then it will always point to http://www.drupal.org'),
+    '#suffix' => '<hr />',
+  );
+  if ($isanchor == '1') {
+    $picon_opento_disabled = FALSE;
+  }
+  else {
+    $picon_opento_disabled = TRUE;
+  }
+  $form['image_link_settings']['picon_opento'] = array(
+    '#type' => 'radios',
+    '#title' => t('Set the behaviour of the link'),
+    '#options' => array(
+      0 => t('Open the link in a new tab.'),
+      1 => t('Open the link in the same tab.'),
+    ),
+    '#disabled' => $picon_opento_disabled,
+    '#default_value' => $opento,
+    '#description' => t('If this value is set to open in a new tab then the TITLE attribute will be disabled and replaced with a usability warning to site visitors that the link will be opened in a new tab. Note that this will not override any external link configuration or modules already in place.'),
+    '#suffix' => '<hr />',
+  );
+  if ($isanchor == '1') {
+    if ($opento == '1') {
+      $picon_title_text_disabled = FALSE;
+      $picon_title_text_default = $title_text;
+    }
+    else {
+      $picon_title_text_disabled = TRUE;
+      $picon_title_text_default = t('This link will open in a new tab');
+    }
+  }
+  else {
+    $picon_title_text_disabled = TRUE;
+  }
+  $form['image_link_settings']['picon_title_text'] = array(
+    '#type' => 'textfield',
+    '#title' => t('The TITLE text attribute of the link'),
+    '#disabled' => $picon_title_text_disabled,
+    '#default_value' => $picon_title_text_default,
+    '#description' => t('The TITLE text attribute of the link that is shown when mouse is hovered over the link.'),
+    '#size' => 52,
+  );
+  $form['display_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Display options'),
+  );
+  $form['display_options']['picon_display'] = array(
+    '#type' => 'radios',
+    '#title' => t('Set the placement of the icon within your template'),
+    '#options' => array(
+      0 => t('Replace standard <strong>Powered By</strong> block icon'),
+      1 => t('Append to your themes <strong>PHP $closure</strong> variable'),
+      2 => t('Append to inside of closing HTML <strong>&#60;&#47;body&#62;</strong> tag <i><small>(requires JavaScript to append</small></i>'),
+    ),
+    '#default_value' => $ren_loc,
+    '#description' => t('Ensure that your theme is compatible with the placement you choose. If using the block selection then check that the block is enabled and placed in your blocks administration area.'),
+  );
+  $form['directory_options'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Folder to scan for images'),
+  );
+  $form['directory_options']['picon_location'] = array(
+    '#type' => 'radios',
+    '#title' => t('The file system location to auto discover images'),
+    '#options' => array(
+      0 => t("Your site <strong>misc</strong> folder"),
+      1 => t('Your themes <strong>images/icons</strong> folder'),
+    ),
+    '#default_value' => $img_loc,
+    '#description' => t('<p>The location that images file that are appropriately named are used for this module. Ensure that any images that you wish to use are named as <strong>powered-</strong>xxxx.PNG . The module will display any images that meet this naming convention in the scrolling panel shown on the right side.</p><p>Changes to the folder will be shown upon next save event</p>'),
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+  return $form;
+}
+
+/**
+ * Form submission handler for picon_admin_settings().
+ */
+function picon_admin_settings_submit($form_id, $form) {
+  $opento = $form['values']['picon_opento'];
+  variable_set('picon_image', $form['values']['picon_image_selection']);
+  variable_set('picon_alt', $form['values']['picon_alt_text']);
+  variable_set('picon_anchor', $form['values']['picon_image_link']);
+  if ($opento) {
+    variable_set('picon_title', t('This link will open in a new tab'));
+  }
+  else {
+    variable_set('picon_title', $form['values']['picon_title_text']);
+  }
+  variable_set('picon_dir', $form['values']['picon_location']);
+  variable_set('picon_location', $form['values']['picon_display']);
+  variable_set('picon_opento', $opento);
+  drupal_set_message(t('Your icon selection has been saved'));
+}
+
+/**
+ * Format the Powered by Drupal text.
+ *
+ * @ingroup themeable.
+ */
+function picon_system_powered_by($image_path, $is_closure = 0) {
+  global $theme_key;
+  $current = variable_get('picon_image', '1');
+  $alt_text = variable_get('picon_alt', 'Powered by Drupal, an open source content management system');
+  $isanchor = variable_get('picon_anchor', '1');
+  $title_text = variable_get('picon_title', 'Powered by Drupal, an open source content management system');
+  $img_loc = variable_get('picon_dir', '0');
+  $ren_loc = variable_get('picon_location', '0');
+  $opento = variable_get('picon_opento', '1');
+  $file_dir = picon_get_img_path($img_loc);
+  $images = picon_get_drupal_images($file_dir);
+  $image_name = $images[$current];
+  if ($file_dir == 'misc') {
+    $theme_path = drupal_get_path('theme', $theme_key);
+    $image_path = $file_dir . '/' . $image_name;
+  }
+  else {
+    $image_path = $image_name;
+  }
+  $image = theme('image', $image_path, t($alt_text), t($title_text));
+  if ($opento == '0') {
+    $title_text = t('This link will open in a new tab');
+    $attrib = array("target" => "_blank", "title" => $title_text);
+    $link_behaviour = "_blank";
+  }
+  elseif ($opento == '1') {
+    $attrib = array("target" => "_self", "title" => $title_text);
+    $link_behaviour = "_self";
+  }
+  /*
+   * Variable $ren_loc sets location of image within page html structure.
+   *  As '0', in powered by block.
+   *  As '1', add to closure.
+   *  As '2', add to inside of body end tag.
+   */
+   // Image as a link.
+  if ($isanchor == 1) {
+    $image_as_link = l($image, 'http://drupal.org', array('attributes' => $attrib, 'html' => TRUE, 'absolute' => FALSE, 'external' => TRUE));
+    if ($ren_loc == 0 && $is_closure == '0' || $ren_loc == 1 && $is_closure == '1') {
+      return $image_as_link;
+    }
+    elseif ($ren_loc == 2 && $is_closure == '0') {
+      $picon_settings = array(
+        'picon_image_path' => check_url(url($image_path)),
+        'picon_alt_text' => check_plain($alt_text),
+        'picon_title_text' => check_plain($title_text),
+        'picon_link_behaviour' => $link_behaviour,
+      );
+      drupal_add_js(array('picon' => $picon_settings), 'setting');
+    }
+  }
+  else {
+    // Flat image without link.
+    if ($ren_loc == 0 && $is_closure == '0' || $ren_loc == 1 && $is_closure == '1') {
+      return $image;
+    }
+    elseif ($ren_loc == 2 && $is_closure == '0') {
+      $picon_settings = array(
+        'picon_image_path' => check_url(url($image_path)),
+        'picon_alt_text' => check_plain($alt_text),
+      );
+      drupal_add_js(array('picon' => $picon_settings), 'setting');
+    }
+  }
+}
+
+/**
+ * Check for output to $closure selected.
+ *
+ * @return string.
+ *   Variable containing HTML.
+ */
+function picon_closure_check() {
+  $closure_use_flag = picon_system_powered_by($image_path, $is_closure = '1');
+  return $closure_use_flag;
+}
